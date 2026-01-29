@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -9,11 +8,11 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/core/prisma.service';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
-import { SmsVerificationType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { VerifySmsCodeDto } from './dto/verify-sms-code.dto';
-import { IUser } from 'src/types/user/user.type';
 import { EnvironmentVariables } from 'src/types/env/EnvironmentVariables.type';
+import { RegisterDto } from './dto/register.dto';
+import { User } from '@prisma/client';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -24,79 +23,34 @@ export class AuthService {
     private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
-  async requestRegistrationCode(phone: string) {
-    const existingUser = await this.usersService.findOne(phone);
+  async register(dto: RegisterDto) {
+    const existingUser = await this.usersService.findOne(dto.email);
     if (existingUser) {
-      throw new ConflictException(
-        'Пользователь с таким номером телефона уже существует.',
-      );
+      throw new ConflictException('Пользователь с таким email уже существует');
     }
-
-    await this.generateAndSendCode(phone, SmsVerificationType.REGISTRATION);
-
-    return {
-      message: 'Код для регистрации отправлен.',
-    };
-  }
-
-  async requestLoginCode(phone: string) {
-    const existingUser = await this.usersService.findOne(phone);
-    if (!existingUser) {
-      throw new BadRequestException('Пользователь с таким номером не найден.');
-    }
-
-    const data = await this.generateAndSendCode(
-      phone,
-      SmsVerificationType.LOGIN,
-    );
-
-    return {
-      message: 'Код для входа отправлен.',
-      code: data.code,
-    };
-  }
-
-  async verifySmsCodeAndLogin(dto: VerifySmsCodeDto) {
-    const { phoneNumber, name, code, type } = dto;
-
-    const verification = await this.prisma.smsVerification.findUnique({
-      where: { phoneNumber_type: { phoneNumber, type } },
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        password: hashedPassword,
+        name: dto.name,
+        roleId: 1, // Или другая логика для роли
+      },
     });
-
-    if (
-      !verification ||
-      verification.code !== code ||
-      new Date() > verification.expiresAt
-    ) {
-      throw new BadRequestException(
-        'Неверный код или срок его действия истёк.',
-      );
-    }
-
-    if (verification) {
-      await this.prisma.smsVerification.delete({
-        where: { id: verification.id },
-      });
-    }
-
-    let user = await this.usersService.findOne(phoneNumber);
-    if (type === SmsVerificationType.REGISTRATION && !user) {
-      user = await this.prisma.user.create({
-        data: { phoneNumber, name, roleId: 1 },
-      });
-    }
-
-    if (!user)
-      throw new UnauthorizedException(
-        'Не удалось найти или создать пользователя.',
-      );
-    return this.login(user as IUser);
+    return this.loginUser(user);
   }
 
-  async login(user: IUser) {
-    const tokens = await this.getTokens(user.id, user.phoneNumber);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+  async login(dto: LoginDto) {
+    const user = await this.usersService.findOne(dto.email);
+    if (!user || !user.password) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+    return this.loginUser(user);
   }
 
   async refreshTokens(userId: number, refreshToken: string) {
@@ -117,7 +71,7 @@ export class AuthService {
     if (!refreshTokenMatches) {
       throw new ForbiddenException('Доступ запрещен.');
     }
-    const tokens = await this.getTokens(user.id, user.phoneNumber);
+    const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
     return tokens;
   }
@@ -142,31 +96,18 @@ export class AuthService {
     });
   }
 
-  private async generateAndSendCode(
-    phoneNumber: string,
-    type: SmsVerificationType,
-  ): Promise<{ code: string }> {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 минуты
-
-    await this.prisma.smsVerification.upsert({
-      where: { phoneNumber_type: { phoneNumber, type } },
-      update: { code, expiresAt },
-      create: { phoneNumber, code, expiresAt, type },
-    });
-    // await this.smsService.sendVerificationCode(phone, code);
-    console.log(
-      `[SMS Service Mock] Code for ${phoneNumber} (${type}): ${code}`,
-    );
-    return { code };
+  private async loginUser(user: User) {
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
   }
 
-  private async getTokens(userId: number, phoneNumber: string) {
+  private async getTokens(userId: number, email: string) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
           sub: userId,
-          phoneNumber,
+          email,
         },
         {
           secret: this.configService.get('JWT_ACCESS_SECRET'),
@@ -176,7 +117,7 @@ export class AuthService {
       this.jwtService.signAsync(
         {
           sub: userId,
-          phoneNumber,
+          email,
         },
         {
           secret: this.configService.get('JWT_REFRESH_SECRET'),

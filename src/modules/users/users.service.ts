@@ -7,14 +7,11 @@ import { PrismaService } from 'src/core/prisma.service';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async genUniqueSlug(
-    attempts = 5,
-    phoneNumber: string,
-  ): Promise<string> {
+  private async genUniqueSlug(attempts = 5, email: string): Promise<string> {
     for (let i = 0; i < attempts; i++) {
       const slug = `u-${Date.now()}-${nanoid(6)}`;
       const exists = await this.prisma.user.findUnique({
-        where: { phoneNumber },
+        where: { email },
       });
       if (!exists) return slug;
     }
@@ -22,11 +19,9 @@ export class UsersService {
     return `u-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
   }
 
-  async findOne(phoneNumber: string): Promise<User | null> {
+  async findOne(email: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
-      where: {
-        phoneNumber,
-      },
+      where: { email },
     });
     return user;
   }

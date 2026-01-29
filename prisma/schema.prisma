@@ -9,7 +9,8 @@ datasource db {
 
 model User {
   id    Int     @default(autoincrement()) @id
-  phoneNumber String @unique
+  email String @unique
+  password String
   name String
   hashedRefreshToken String?
   roleId Int
@@ -49,20 +50,6 @@ model UserTranslation {
   @@map("user_translations")
 }
 
-model SmsVerification {
-  id        Int                 @id @default(autoincrement())
-  phoneNumber     String
-  code      String
-  type      SmsVerificationType
-  expiresAt DateTime
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([phoneNumber, type])
-  @@map("sms_verifications")
-}
-
 model RoleTranslation {
   id Int @default(autoincrement()) @id
   roleId Int
@@ -73,10 +60,4 @@ model RoleTranslation {
 
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
   @@map("role_translations")
-}
-
-enum SmsVerificationType {
-  REGISTRATION
-  LOGIN
-  PASSWORD_RESET
 }

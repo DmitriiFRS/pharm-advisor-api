@@ -6,36 +6,25 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RequestCodeDto } from './dto/request-code.dto';
-import { VerifySmsCodeDto } from './dto/verify-sms-code.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtPayload } from 'src/types/jwt/jwt-payload.type';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('request-registration-code')
-  async requestRegistrationCode(
-    @Body() dto: RequestCodeDto,
-  ): Promise<{ message: string }> {
-    return this.authService.requestRegistrationCode(dto.phoneNumber);
+  @Post('register')
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
-  @Post('request-login-code')
-  async requestLoginCode(
-    @Body() dto: RequestCodeDto,
-  ): Promise<{ message: string; code: string }> {
-    return this.authService.requestLoginCode(dto.phoneNumber);
-  }
-
-  @Post('verify-code')
-  async verifyCode(
-    @Body() dto: VerifySmsCodeDto,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    return await this.authService.verifySmsCodeAndLogin(dto);
+  @Post('login')
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 
   @Post('logout')
