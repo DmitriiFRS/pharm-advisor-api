@@ -28,7 +28,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" > .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
           echo "NODE_ENV=production" >> .env
           echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env
           echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env
