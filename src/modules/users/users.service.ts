@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import { PrismaService } from 'src/core/prisma.service';
@@ -17,6 +17,29 @@ export class UsersService {
     }
     // fallback
     return `u-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+  }
+
+  async getMe(
+    id: number,
+  ): Promise<Pick<
+    User,
+    'id' | 'email' | 'name' | 'createdAt' | 'updatedAt'
+  > | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    console.log(user);
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+    return user;
   }
 
   async findOne(email: string): Promise<User | null> {

@@ -12,6 +12,7 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtPayload } from 'src/types/jwt/jwt-payload.type';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -37,7 +38,7 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   async refreshTokens(
     @GetUser() userFromToken: JwtPayload,
-    @Body('refreshToken') refreshToken: string,
+    @Body() dto: RefreshTokenDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const userId = userFromToken?.sub;
 
@@ -47,6 +48,6 @@ export class AuthController {
       );
     }
 
-    return await this.authService.refreshTokens(userId, refreshToken);
+    return await this.authService.refreshTokens(userId, dto.refreshToken);
   }
 }

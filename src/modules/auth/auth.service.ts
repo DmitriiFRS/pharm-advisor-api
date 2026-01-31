@@ -13,6 +13,8 @@ import { EnvironmentVariables } from 'src/types/env/EnvironmentVariables.type';
 import { RegisterDto } from './dto/register.dto';
 import { User } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
+import * as crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -54,19 +56,22 @@ export class AuthService {
   }
 
   async refreshTokens(userId: number, refreshToken: string) {
-    // if (!refreshToken) {
-    //   throw new ForbiddenException('Доступ запрещен.');
-    // }
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
     if (!user || !user.hashedRefreshToken) {
       throw new ForbiddenException('Доступ запрещен.');
     }
-    const refreshTokenMatches = await bcrypt.compare(
-      refreshToken,
-      user.hashedRefreshToken,
-    );
+
+    try {
+      await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      throw new ForbiddenException('Некорректный Refresh Token');
+    }
+    const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    const refreshTokenMatches = hash === user.hashedRefreshToken;
 
     if (!refreshTokenMatches) {
       throw new ForbiddenException('Доступ запрещен.');
@@ -88,11 +93,10 @@ export class AuthService {
   }
 
   private async updateRefreshToken(userId: number, refreshToken: string) {
-    const salt = await bcrypt.genSalt();
-    const hashedToken = await bcrypt.hash(refreshToken, salt);
+    const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
     await this.prisma.user.update({
       where: { id: userId },
-      data: { hashedRefreshToken: hashedToken },
+      data: { hashedRefreshToken: hash },
     });
   }
 
@@ -108,6 +112,7 @@ export class AuthService {
         {
           sub: userId,
           email,
+          jti: uuidv4(),
         },
         {
           secret: this.configService.get('JWT_ACCESS_SECRET'),
@@ -118,6 +123,7 @@ export class AuthService {
         {
           sub: userId,
           email,
+          jti: uuidv4(),
         },
         {
           secret: this.configService.get('JWT_REFRESH_SECRET'),
@@ -129,5 +135,18 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async checkAccessTokenExpiration(accessToken: string) {
+    try {
+      await this.jwtService.verifyAsync(accessToken, {
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+      });
+    } catch (e) {
+      if (e.name === 'TokenExpiredError') {
+        throw new ForbiddenException('Token expired');
+      }
+      throw e;
+    }
   }
 }
