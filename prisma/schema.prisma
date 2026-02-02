@@ -59,5 +59,6 @@ model RoleTranslation {
   updatedAt DateTime @updatedAt
 
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@unique([roleId, locale])
   @@map("role_translations")
 }
