@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/core/prisma.service';
 import { UsersService } from '../users/users.service';
@@ -48,6 +43,7 @@ export class AuthService {
     if (!user || !user.password) {
       throw new UnauthorizedException('Неверный email или пароль');
     }
+
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Неверный email или пароль');
@@ -103,7 +99,15 @@ export class AuthService {
   private async loginUser(user: User) {
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        roleId: user.roleId,
+      },
+      ...tokens,
+    };
   }
 
   private async getTokens(userId: number, email: string) {
