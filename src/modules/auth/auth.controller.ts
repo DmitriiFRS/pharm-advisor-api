@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
@@ -43,11 +37,14 @@ export class AuthController {
     const userId = userFromToken?.sub;
 
     if (!userId) {
-      throw new ForbiddenException(
-        'Could not identify user from token payload.',
-      );
+      throw new ForbiddenException('Could not identify user from token payload.');
     }
 
     return await this.authService.refreshTokens(userId, dto.refreshToken);
+  }
+  //======================== admin ========================
+  @Post('admin/login')
+  async adminLogin(@Body() dto: LoginDto) {
+    return this.authService.adminLogin(dto);
   }
 }

@@ -28,6 +28,7 @@ model Role {
   id Int @default(autoincrement()) @id
   name String @unique
   slug String @unique
+  admin Boolean @default(false)
   user User[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -35,6 +36,22 @@ model Role {
   translations RoleTranslation[]
 
   @@map("roles")
+}
+
+model Article {
+  id Int @default(autoincrement()) @id
+  title String
+  content String @db.Text
+  image String?
+  slug String @unique
+  isPublished Boolean @default(true)
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  translations ArticleTranslation[]
+
+  @@map("articles")
 }
 
 model UserTranslation {
@@ -50,6 +67,20 @@ model UserTranslation {
   @@map("user_translations")
 }
 
+model Contact {
+  id Int @default(autoincrement()) @id
+  name String
+  email String
+  phone String
+  telegramLink String
+  googleMapsLink String
+  instagramLink String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contacts")
+}
+
 model RoleTranslation {
   id Int @default(autoincrement()) @id
   roleId Int
@@ -61,4 +92,18 @@ model RoleTranslation {
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
   @@unique([roleId, locale])
   @@map("role_translations")
+}
+
+model ArticleTranslation {
+  id Int @default(autoincrement()) @id
+  articleId Int
+  locale String
+  title String
+  content String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  @@unique([articleId, locale])
+  @@map("article_translations")
 }

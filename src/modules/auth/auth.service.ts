@@ -153,4 +153,27 @@ export class AuthService {
       throw e;
     }
   }
+
+  async adminLogin(dto: LoginDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: { role: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+    if (user.role.admin === false) {
+      throw new UnauthorizedException('Недостаточно прав');
+    }
+
+    if (!user.password || !user.email) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+    return this.loginUser(user);
+  }
 }
