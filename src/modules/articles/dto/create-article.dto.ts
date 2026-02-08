@@ -1,13 +1,23 @@
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDate, IsOptional, IsString } from 'class-validator';
 
 export class CreateArticleDto {
   @IsString()
-  title: string;
+  titleRu: string;
 
   @IsString()
-  content: string;
+  @IsOptional()
+  titleUz?: string;
 
-  @IsDateString()
+  @IsString()
+  descriptionRu: string;
+
+  @IsOptional()
+  @IsString()
+  descriptionUz?: string;
+
+  @Type(() => Date)
+  @IsDate()
   publishedAt: Date;
 
   @IsOptional()

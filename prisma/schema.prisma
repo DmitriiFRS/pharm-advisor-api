@@ -42,12 +42,14 @@ model Article {
   id Int @default(autoincrement()) @id
   title String
   content String @db.Text
-  image String?
   slug String @unique
   isPublished Boolean @default(true)
   publishedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  imageId Int?
+  media Media? @relation(fields: [imageId], references: [id], onDelete: SetNull) 
 
   translations ArticleTranslation[]
 
@@ -68,13 +70,13 @@ model UserTranslation {
 }
 
 model Contact {
-  id Int @default(autoincrement()) @id
-  name String
-  email String
-  phone String
-  telegramLink String
-  googleMapsLink String
-  instagramLink String
+  id Int @id @default(1) 
+  email String?
+  phone String?
+  address String?
+  telegramLink String?
+  googleMapsLink String?
+  instagramLink String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -92,6 +94,20 @@ model RoleTranslation {
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
   @@unique([roleId, locale])
   @@map("role_translations")
+}
+
+model Media {
+  id Int @default(autoincrement()) @id
+  url String
+  fileName String
+  mimeType String
+  size Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  articles Article[]
+
+  @@map("media")
 }
 
 model ArticleTranslation {
