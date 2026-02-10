@@ -7,6 +7,10 @@ export class UpdateContactsDto {
 
   @IsOptional()
   @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
   phone?: string;
 
   @IsOptional()

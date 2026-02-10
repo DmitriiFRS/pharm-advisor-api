@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/core/prisma.service';
 import { TranslationService } from '../translations/translations.service';
@@ -48,9 +48,23 @@ export class ArticlesService {
     };
   }
 
-  async createArticle(dto: CreateArticleDto, image: Express.Multer.File) {
-    console.log(dto);
+  async getArticleById(id: number, locale: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { id },
+      include: { media: true, pdf: true, translations: true },
+    });
+    if (!article) {
+      throw new NotFoundException(`Article with ID ${id} not found`);
+    }
+    const data = this.translationService.translateDeep(article, locale);
+    return { ...data, translations: article.translations };
+  }
+
+  async createArticle(dto: CreateArticleDto, files: { image?: Express.Multer.File[]; pdf?: Express.Multer.File[] }) {
     const { publishedAt, slug, titleRu, titleUz, descriptionRu, descriptionUz } = dto;
+
+    const image = files.image?.[0];
+    const pdf = files.pdf?.[0];
 
     return await this.prisma.$transaction(async (tx) => {
       let finalSlug = slug;
@@ -61,9 +75,15 @@ export class ArticlesService {
           locale: 'ru',
         });
       }
-      let uploadedMedia: { id: number } | null = null;
+      let uploadedMediaId: number | null = null;
       if (image) {
-        uploadedMedia = await this.uploadService.processAndUploadFile(image, tx);
+        const uploaded = await this.uploadService.processAndUploadFile(image, tx);
+        uploadedMediaId = uploaded.id;
+      }
+      let uploadedPdfId: number | null = null;
+      if (pdf) {
+        const uploaded = await this.uploadService.processAndUploadFile(pdf, tx);
+        uploadedPdfId = uploaded.id;
       }
       const article = await tx.article.create({
         data: {
@@ -71,7 +91,8 @@ export class ArticlesService {
           content: descriptionRu,
           publishedAt,
           slug: finalSlug,
-          imageId: uploadedMedia?.id || null,
+          imageId: uploadedMediaId || null,
+          pdfId: uploadedPdfId || null,
         },
       });
 
@@ -104,8 +125,14 @@ export class ArticlesService {
     });
   }
 
-  async updateArticle(id: number, dto: UpdateArticleDto, image: Express.Multer.File) {
-    const { publishedAt, slug, imageId, titleRu, titleUz, descriptionRu, descriptionUz } = dto;
+  async updateArticle(
+    id: number,
+    dto: UpdateArticleDto,
+    files: { image?: Express.Multer.File[]; pdf?: Express.Multer.File[] },
+  ) {
+    const { publishedAt, slug, imageId, pdfId, titleRu, titleUz, descriptionRu, descriptionUz } = dto;
+    const image = files.image?.[0];
+    const pdf = files.pdf?.[0];
 
     return await this.prisma.$transaction(async (tx) => {
       const currentArticle = await tx.article.findUnique({ where: { id } });
@@ -127,7 +154,6 @@ export class ArticlesService {
       };
       if (titleRu) updateData.title = titleRu;
       if (descriptionRu) updateData.content = descriptionRu;
-
       if (finalSlug) updateData.slug = finalSlug;
 
       if (imageId) {
@@ -136,17 +162,30 @@ export class ArticlesService {
         if (!file) {
           throw new BadRequestException('Файл для удаления не найден');
         }
-        await this.uploadService.deleteFile(file.url as string, tx);
+        await this.uploadService.deleteFile(file.url, tx);
       }
       if (image) {
         const uploadedImage = await this.uploadService.processAndUploadFile(image, tx);
         updateData.imageId = uploadedImage.id;
       }
 
+      if (pdfId) {
+        if (currentArticle.pdfId !== pdfId) throw new BadRequestException('Неверный ID PDF');
+        const file = await tx.media.findUnique({ where: { id: pdfId } });
+        if (file) {
+          await this.uploadService.deleteFile(file.url, tx);
+        }
+        updateData.pdfId = null;
+      }
+      if (pdf) {
+        const uploadedPdf = await this.uploadService.processAndUploadFile(pdf, tx);
+        updateData.pdfId = uploadedPdf.id;
+      }
+
       const article = await tx.article.update({
         where: { id },
         data: updateData,
-        include: { media: true },
+        include: { media: true, pdf: true },
       });
 
       // Обновляем переводы (upsert)
@@ -194,5 +233,22 @@ export class ArticlesService {
         },
       });
     }
+  }
+
+  async deleteArticle(id: number) {
+    const article = await this.prisma.article.findUnique({ where: { id } });
+    if (!article) {
+      throw new NotFoundException(`Article with ID ${id} not found`);
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      if (article.imageId) {
+        const file = await tx.media.findUnique({ where: { id: article.imageId } });
+        if (file) {
+          await this.uploadService.deleteFile(file.url, tx);
+        }
+      }
+      return await tx.article.delete({ where: { id } });
+    });
   }
 }
