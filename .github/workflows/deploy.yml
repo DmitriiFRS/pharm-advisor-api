@@ -44,7 +44,7 @@ jobs:
 
       - name: Transfer necessary files with rsync
         run: |
-          rsync -avz -e "ssh" ./dist/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/dist/
+          rsync -avz --delete -e "ssh" ./dist/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/dist/
           rsync -avz -e "ssh" ./package.json ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/
           rsync -avz -e "ssh" ./uploads/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/uploads/
           rsync -avz -e "ssh" ./prisma/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/prisma/
