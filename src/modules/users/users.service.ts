@@ -101,4 +101,80 @@ export class UsersService {
     });
     return user;
   }
+
+  async getRegistrationStats(year: number = new Date().getFullYear()) {
+    const stats = await this.prisma.$queryRaw<{ month: number; count: bigint }[]>`
+      SELECT MONTH(createdAt) as month,
+      COUNT(*) as count
+      FROM users
+      WHERE YEAR(createdAt) = ${year}
+      GROUP BY MONTH(createdAt)
+      ORDER BY month ASC
+    `;
+
+    const result = Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(2000, i, 1);
+      return {
+        month: date.toLocaleString('en-US', {
+          month: 'short',
+        }),
+        users: 0,
+      };
+    });
+
+    stats.forEach((item) => {
+      // Явное приведение BigInt к Number перед использованием
+      const index = Number(item.month) - 1;
+      if (index >= 0 && index < 12) {
+        result[index].users = Number(item.count);
+      }
+    });
+    return result;
+  }
+
+  async getDashboardActivity() {
+    const [latestRegistrations, latestLogins] = await Promise.all([
+      this.prisma.user.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        where: {
+          role: {
+            admin: false,
+          },
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          createdAt: true,
+          role: true,
+        },
+      }),
+      this.prisma.userLogin.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        where: {
+          user: {
+            role: {
+              admin: false,
+            },
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
+      }),
+    ]);
+    return {
+      latestRegistrations,
+      latestLogins,
+    };
+  }
 }

@@ -6,6 +6,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 
 async function bootstrap() {
+  // Исправление для сериализации BigInt в JSON (возвращаем как число)
+  (BigInt.prototype as any).toJSON = function () {
+    return Number(this);
+  };
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const uploadsPath = join(__dirname, '..', '..', 'uploads');
 

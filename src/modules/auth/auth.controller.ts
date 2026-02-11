@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
@@ -7,6 +7,8 @@ import { JwtPayload } from 'src/types/jwt/jwt-payload.type';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh.dto';
+import { AdminGuard } from 'src/common/guards/admin.guard';
+import { AdminOnly } from 'src/common/decorators/admin-only.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -46,5 +48,13 @@ export class AuthController {
   @Post('admin/login')
   async adminLogin(@Body() dto: LoginDto) {
     return this.authService.adminLogin(dto);
+  }
+
+  @Get('login-stats')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @AdminOnly()
+  async getLoginStats(@Query('year') year?: string) {
+    const parsedYear = year ? parseInt(year) : new Date().getFullYear();
+    return await this.authService.getLoginStats(parsedYear);
   }
 }

@@ -99,6 +99,19 @@ export class AuthService {
   private async loginUser(user: User) {
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+    const lastLogin = await this.prisma.userLogin.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+    });
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const shouldLog = !lastLogin || lastLogin.createdAt < oneHourAgo;
+    if (shouldLog) {
+      await this.prisma.userLogin.create({
+        data: { userId: user.id },
+      });
+    }
+
     return {
       user: {
         id: user.id,
@@ -175,5 +188,30 @@ export class AuthService {
       throw new UnauthorizedException('Неверный email или пароль');
     }
     return this.loginUser(user);
+  }
+
+  async getLoginStats(year: number = new Date().getFullYear()) {
+    const stats = await this.prisma.$queryRaw<{ month: number; count: bigint }[]>`
+      SELECT MONTH(createdAt) as month,
+      COUNT(*) as count
+      FROM user_logins
+      WHERE YEAR(createdAt) = ${year}
+      GROUP BY MONTH(createdAt)
+      ORDER BY month ASC
+    `;
+    const result = Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(2000, i, 1);
+      return {
+        month: date.toLocaleString('en-US', { month: 'short' }),
+        logins: 0,
+      };
+    });
+    stats.forEach((item) => {
+      const index = Number(item.month) - 1;
+      if (index >= 0 && index < 12) {
+        result[index].logins = Number(item.count);
+      }
+    });
+    return result;
   }
 }
