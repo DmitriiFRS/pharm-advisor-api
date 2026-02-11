@@ -57,5 +57,5 @@ jobs:
             npm install --production
             npx prisma generate
             npx prisma migrate deploy
-            pm2 restart api || pm2 start --name "api" dist/main.js
+            pm2 reload api --update-env || pm2 start dist/src/main.js --name "api"
           EOF
