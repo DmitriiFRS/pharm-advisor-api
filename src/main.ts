@@ -20,9 +20,29 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
+  const allowedOrigins = [
+    'https://movein.theagency.uz',
+    'https://admin.movein.theagency.uz',
+    'https://movein.uz',
+    'https://admin.movein.uz',
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ];
   app.useGlobalInterceptors(new TransformResponseInterceptor());
   app.setGlobalPrefix('api');
-  app.enableCors();
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Домен не разрешен политикой CORS'));
+      }
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
   app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
     setHeaders: (res: import('express').Response) => {
