@@ -27,6 +27,7 @@ async function bootstrap() {
     'https://www.admin.pharmadvisor.uz',
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:4000',
   ];
   app.useGlobalInterceptors(new TransformResponseInterceptor());
   app.setGlobalPrefix('api');
