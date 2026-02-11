@@ -21,10 +21,8 @@ async function bootstrap() {
     }),
   );
   const allowedOrigins = [
-    'https://movein.theagency.uz',
-    'https://admin.movein.theagency.uz',
-    'https://movein.uz',
-    'https://admin.movein.uz',
+    'https://pharmadvisor.uz',
+    'https://admin.pharmadvisor.uz',
     'http://localhost:3000',
     'http://localhost:3001',
   ];
