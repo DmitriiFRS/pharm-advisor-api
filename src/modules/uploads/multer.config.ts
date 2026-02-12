@@ -15,5 +15,5 @@ export const multerConfig = {
       cb(new Error('Файл не является изображением!'), false);
     }
   },
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
 };
