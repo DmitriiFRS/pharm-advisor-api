@@ -117,17 +117,17 @@ export class AuthService {
           data: { userId: user.id },
         });
       }
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          roleId: user.roleId,
-        },
-        ...tokens,
-      };
     }
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        roleId: user.roleId,
+      },
+      ...tokens,
+    };
   }
 
   private async getTokens(userId: number, email: string) {
