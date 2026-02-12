@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   // Исправление для сериализации BigInt в JSON (возвращаем как число)
@@ -13,6 +14,9 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const uploadsPath = join(__dirname, '..', '..', 'uploads');
+
+  app.use(json({ limit: '100mb' }));
+  app.use(urlencoded({ extended: true, limit: '100mb' }));
 
   app.useGlobalPipes(
     new ValidationPipe({

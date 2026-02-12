@@ -24,10 +24,10 @@ export class ArticlesService {
         orderBy: { createdAt: 'desc' },
         skip,
         take,
+        include: { media: true, pdf: true, translations: true },
       }),
       this.prisma.article.count(),
     ]);
-
     return {
       data: articles,
       meta: {
