@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { EnvironmentVariables } from 'src/types/env/EnvironmentVariables.type';
 import { RegisterDto } from './dto/register.dto';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
 import * as crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,6 +33,9 @@ export class AuthService {
         password: hashedPassword,
         name: dto.name,
         roleId: 1, // Или другая логика для роли
+      },
+      include: {
+        role: true,
       },
     });
     return this.loginUser(user);
@@ -96,31 +99,35 @@ export class AuthService {
     });
   }
 
-  private async loginUser(user: User) {
+  private async loginUser(user: User & { role: Role }) {
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    const lastLogin = await this.prisma.userLogin.findFirst({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const shouldLog = !lastLogin || lastLogin.createdAt < oneHourAgo;
-    if (shouldLog) {
-      await this.prisma.userLogin.create({
-        data: { userId: user.id },
-      });
-    }
+    const isAdmin = user.role?.admin;
 
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        roleId: user.roleId,
-      },
-      ...tokens,
-    };
+    if (!isAdmin) {
+      const lastLogin = await this.prisma.userLogin.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+      });
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const shouldLog = !lastLogin || lastLogin.createdAt < oneHourAgo;
+      if (shouldLog) {
+        await this.prisma.userLogin.create({
+          data: { userId: user.id },
+        });
+      }
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          roleId: user.roleId,
+        },
+        ...tokens,
+      };
+    }
   }
 
   private async getTokens(userId: number, email: string) {

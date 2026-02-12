@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import { PrismaService } from 'src/core/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -95,9 +95,10 @@ export class UsersService {
     return updatedUser;
   }
 
-  async findOne(email: string): Promise<User | null> {
+  async findOne(email: string): Promise<(User & { role: Role }) | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      include: { role: true },
     });
     return user;
   }
