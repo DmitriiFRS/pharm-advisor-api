@@ -13,6 +13,8 @@ model User {
   password String
   name String
   hashedRefreshToken String?
+  isVerified Boolean @default(false)
+  verificationToken String? @db.Text
   roleId Int
 
   translations UserTranslation[]

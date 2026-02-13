@@ -10,6 +10,7 @@ import { Role, User } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
 import * as crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private readonly configService: ConfigService<EnvironmentVariables>,
+    private readonly mailService: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -27,18 +29,25 @@ export class AuthService {
     }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(dto.password, salt);
+    const verificationToken = uuidv4();
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         password: hashedPassword,
         name: dto.name,
         roleId: 1, // Или другая логика для роли
+        verificationToken,
+        isVerified: false,
       },
       include: {
         role: true,
       },
     });
-    return this.loginUser(user);
+    await this.mailService.sendVerificationEmail(user.email, verificationToken);
+    return {
+      message: 'Регистрация прошла успешно. Пожалуйста, проверьте вашу почту для подтверждения аккаунта.',
+    };
   }
 
   async login(dto: LoginDto) {
@@ -50,6 +59,9 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Неверный email или пароль');
+    }
+    if (!user.isVerified) {
+      throw new ForbiddenException('Email не подтвержден. Пожалуйста, проверьте почту.');
     }
     return this.loginUser(user);
   }
@@ -125,6 +137,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         roleId: user.roleId,
+        isVerified: user.isVerified,
       },
       ...tokens,
     };
@@ -220,5 +233,43 @@ export class AuthService {
       }
     });
     return result;
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { verificationToken: token },
+      include: { role: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Неверный токен подтверждения');
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isVerified: true,
+        verificationToken: null,
+      },
+    });
+    return this.loginUser(user);
+  }
+
+  async resendVerificationEmail(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+    if (user.isVerified) {
+      throw new ConflictException('Аккаунт уже подтвержден');
+    }
+    let verificationToken = user.verificationToken;
+    if (!verificationToken) {
+      verificationToken = uuidv4();
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { verificationToken },
+      });
+    }
+    await this.mailService.sendVerificationEmail(user.email, verificationToken as string);
+    return { message: 'Письмо с подтверждением отправлено повторно.' };
   }
 }

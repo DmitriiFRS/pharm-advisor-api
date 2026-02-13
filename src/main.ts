@@ -37,11 +37,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.enableCors({
     origin: (origin, callback) => {
-      console.log('Incoming origin:', origin); // Debugging
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.error(`Blocked by CORS: ${origin}`); // Debugging
         callback(new Error('Домен не разрешен политикой CORS'));
       }
     },

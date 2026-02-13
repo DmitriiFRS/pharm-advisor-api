@@ -8,9 +8,10 @@ import { SmsModule } from './modules/sms/sms.module';
 import { ArticlesModule } from './modules/articles/articles.module';
 import { TranslationsModule } from './modules/translations/translations.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, SmsModule, ArticlesModule, TranslationsModule, ContactsModule],
+  imports: [AuthModule, UsersModule, SmsModule, ArticlesModule, TranslationsModule, ContactsModule, MailModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })

@@ -29,6 +29,7 @@ export class UsersService {
         id: true,
         email: true,
         name: true,
+        isVerified: true,
         createdAt: true,
         updatedAt: true,
       },

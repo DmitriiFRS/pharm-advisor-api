@@ -44,6 +44,16 @@ export class AuthController {
 
     return await this.authService.refreshTokens(userId, dto.refreshToken);
   }
+  @Get('verify')
+  async verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
+
+  @Post('resend-verification')
+  async resendVerification(@Body('email') email: string) {
+    return this.authService.resendVerificationEmail(email);
+  }
+
   //======================== admin ========================
   @Post('admin/login')
   async adminLogin(@Body() dto: LoginDto) {
