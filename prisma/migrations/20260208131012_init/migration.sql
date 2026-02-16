@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `contacts` MODIFY `id` INTEGER NOT NULL DEFAULT 1;
