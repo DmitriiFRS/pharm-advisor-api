@@ -7,6 +7,7 @@ import defaultSlugify from 'slugify';
 import { UploadsService } from '../uploads/uploads.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { PaginationService } from 'src/common/service/pagination.service';
 
 @Injectable()
 export class ArticlesService {
@@ -14,29 +15,19 @@ export class ArticlesService {
     private readonly prisma: PrismaService,
     private readonly translationService: TranslationService,
     private readonly uploadService: UploadsService,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async getArticles({ page = 1, limit = 10 }: { page?: number; limit?: number }) {
-    const skip = (page - 1) * limit;
-    const take = limit;
-    const [articles, total] = await Promise.all([
-      this.prisma.article.findMany({
+    return this.paginationService.getPaginatedItems({
+      modelName: 'Article',
+      page,
+      limit,
+      params: {
         orderBy: { createdAt: 'desc' },
-        skip,
-        take,
         include: { media: true, pdf: true, translations: true },
-      }),
-      this.prisma.article.count(),
-    ]);
-    return {
-      data: articles,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
       },
-    };
+    });
   }
 
   async getTranslatedArticles({ locale, paginationDto }: { locale: string; paginationDto: PaginationDto }) {

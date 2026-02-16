@@ -12,6 +12,7 @@ model User {
   email String @unique
   password String
   name String
+  phoneNumber String?
   hashedRefreshToken String?
   isVerified Boolean @default(false)
   verificationToken String? @db.Text

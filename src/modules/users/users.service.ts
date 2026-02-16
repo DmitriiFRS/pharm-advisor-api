@@ -5,10 +5,14 @@ import { PrismaService } from 'src/core/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import * as bcrypt from 'bcrypt';
+import { PaginationService } from 'src/common/service/pagination.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationService: PaginationService,
+  ) {}
 
   private async genUniqueSlug(attempts = 5, email: string): Promise<string> {
     for (let i = 0; i < attempts; i++) {
@@ -20,6 +24,18 @@ export class UsersService {
     }
     // fallback
     return `u-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+  }
+
+  async getUserList({ page = 1, limit = 10 }: { page?: number; limit?: number }) {
+    return this.paginationService.getPaginatedItems({
+      modelName: 'User',
+      page,
+      limit,
+      params: {
+        orderBy: { createdAt: 'desc' },
+        include: { role: true, translations: true },
+      },
+    });
   }
 
   async getMe(id: number): Promise<Pick<User, 'id' | 'email' | 'name' | 'createdAt' | 'updatedAt'> | null> {

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, UseGuards, Patch, Query } from '@nestjs/common';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
@@ -42,5 +43,12 @@ export class UsersController {
   @AdminOnly()
   async getDashboardActivity() {
     return await this.usersService.getDashboardActivity();
+  }
+
+  @Get('list')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @AdminOnly()
+  async getUserList(@Query() query: PaginationDto) {
+    return await this.usersService.getUserList(query);
   }
 }
