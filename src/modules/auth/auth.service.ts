@@ -1,4 +1,10 @@
-import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/core/prisma.service';
 import { UsersService } from '../users/users.service';
@@ -11,6 +17,8 @@ import { LoginDto } from './dto/login.dto';
 import * as crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from '../mail/mail.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -269,7 +277,56 @@ export class AuthService {
         data: { verificationToken },
       });
     }
-    await this.mailService.sendVerificationEmail(user.email, verificationToken as string);
+    await this.mailService.sendVerificationEmail(user.email, verificationToken);
     return { message: 'Письмо с подтверждением отправлено повторно.' };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const passwordResetMessage =
+      'Если такой email существует, мы отправили на него инструкцию по восстановлению пароля.';
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (!user) {
+      return { message: passwordResetMessage };
+    }
+    const token = uuidv4();
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 1);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: token,
+        passwordResetExpires: expires,
+      },
+    });
+    await this.mailService.sendPasswordResetEmail(user.email, token);
+    return { message: passwordResetMessage };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: dto.token,
+        passwordResetExpires: {
+          gt: new Date(),
+        },
+      },
+    });
+    if (!user) {
+      throw new BadRequestException('Неверный или просроченный токен сброса пароля');
+    }
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        hashedRefreshToken: null,
+      },
+    });
+    return { message: 'Пароль успешно изменен' };
   }
 }

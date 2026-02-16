@@ -9,6 +9,8 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh.dto';
 import { AdminGuard } from 'src/common/guards/admin.guard';
 import { AdminOnly } from 'src/common/decorators/admin-only.decorator';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -43,6 +45,14 @@ export class AuthController {
     }
 
     return await this.authService.refreshTokens(userId, dto.refreshToken);
+  }
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
   @Get('verify')
   async verifyEmail(@Query('token') token: string) {

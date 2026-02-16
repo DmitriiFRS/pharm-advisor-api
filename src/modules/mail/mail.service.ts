@@ -33,4 +33,20 @@ export class MailService {
       `,
     });
   }
+
+  async sendPasswordResetEmail(email: string, token: string) {
+    const resetLink = `${this.configService.get('CLIENT_URL')}/reset-password?token=${token}`;
+
+    await this.transporter.sendMail({
+      from: this.configService.get('SMTP_FROM'),
+      to: email,
+      subject: 'Сброс пароля',
+      html: `
+      <h1>Сброс пароля</h1>
+      <p>Вы запросили сброс пароля. Перейдите по ссылке ниже, чтобы задать новый пароль:</p>
+      <a href="${resetLink}">Сбросить пароль</a>
+      <p>Ссылка действительна в течение 1 часа.</p>
+    `,
+    });
+  }
 }
