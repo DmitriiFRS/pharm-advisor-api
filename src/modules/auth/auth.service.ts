@@ -44,6 +44,7 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         name: dto.name,
+        phoneNumber: dto.phoneNumber,
         roleId: 1, // Или другая логика для роли
         verificationToken,
         isVerified: false,
