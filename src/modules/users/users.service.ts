@@ -45,6 +45,7 @@ export class UsersService {
         id: true,
         email: true,
         name: true,
+        phoneNumber: true,
         isVerified: true,
         createdAt: true,
         updatedAt: true,
@@ -59,13 +60,12 @@ export class UsersService {
   async updateProfile(
     userId: number,
     dto: UpdateProfileDto,
-  ): Promise<Pick<User, 'id' | 'email' | 'name' | 'createdAt' | 'updatedAt'> | null> {
-    console.log('userId', userId);
-    console.log('dto', dto);
+  ): Promise<Pick<User, 'id' | 'email' | 'name' | 'phoneNumber' | 'createdAt' | 'updatedAt'> | null> {
     const user = await this.getMe(userId);
     if (!user) {
       throw new UnauthorizedException('Пользователь не найден');
     }
+
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: dto,
@@ -73,6 +73,7 @@ export class UsersService {
         id: true,
         email: true,
         name: true,
+        phoneNumber: true,
         createdAt: true,
         updatedAt: true,
       },

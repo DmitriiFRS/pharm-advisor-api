@@ -9,9 +9,11 @@ export class RegisterDto {
   password: string;
 
   @IsString()
+  @MinLength(10, { message: 'Номер телефона должен быть не менее 10 символов' })
   phoneNumber: string;
 
   @IsString()
+  @MinLength(2, { message: 'Имя должно быть не менее 2 символов' })
   name: string;
 }
 //

@@ -9,4 +9,9 @@ export class UpdateProfileDto {
   @IsString()
   @IsEmail()
   email: string;
+
+  @IsString()
+  @MinLength(10)
+  @MaxLength(15)
+  phoneNumber: string;
 }
