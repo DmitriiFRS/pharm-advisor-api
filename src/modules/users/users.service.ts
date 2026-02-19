@@ -148,7 +148,6 @@ export class UsersService {
         result[index].users = Number(item.count);
       }
     });
-    console.log(result);
     return result;
   }
 
@@ -166,6 +165,7 @@ export class UsersService {
           id: true,
           email: true,
           name: true,
+          phoneNumber: true,
           createdAt: true,
           role: true,
         },
@@ -186,6 +186,7 @@ export class UsersService {
               id: true,
               email: true,
               name: true,
+              phoneNumber: true,
               role: true,
             },
           },
