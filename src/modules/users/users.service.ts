@@ -123,11 +123,12 @@ export class UsersService {
 
   async getRegistrationStats(year: number = new Date().getFullYear()) {
     const stats = await this.prisma.$queryRaw<{ month: number; count: bigint }[]>`
-      SELECT MONTH(createdAt) as month,
-      COUNT(*) as count
-      FROM users
-      WHERE YEAR(createdAt) = ${year}
-      GROUP BY MONTH(createdAt)
+      SELECT MONTH(u.createdAt) as month,
+      COUNT(u.id) as count
+      FROM users u
+      LEFT JOIN roles r ON u.roleId = r.id
+      WHERE YEAR(u.createdAt) = ${year} AND r.admin = 0
+      GROUP BY MONTH(u.createdAt)
       ORDER BY month ASC
     `;
 
@@ -142,7 +143,6 @@ export class UsersService {
     });
 
     stats.forEach((item) => {
-      // Явное приведение BigInt к Number перед использованием
       const index = Number(item.month) - 1;
       if (index >= 0 && index < 12) {
         result[index].users = Number(item.count);
