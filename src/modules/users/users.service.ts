@@ -148,6 +148,7 @@ export class UsersService {
         result[index].users = Number(item.count);
       }
     });
+    console.log(result);
     return result;
   }
 

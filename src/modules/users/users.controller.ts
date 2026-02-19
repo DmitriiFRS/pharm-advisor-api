@@ -51,4 +51,12 @@ export class UsersController {
   async getUserList(@Query() query: PaginationDto) {
     return await this.usersService.getUserList(query);
   }
+
+  // ================== ADMIN ==================
+  @Get('get-me-admin')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @AdminOnly()
+  async getMeAdmin(@GetUser('id') userId: number) {
+    return await this.usersService.getMe(userId);
+  }
 }
