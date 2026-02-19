@@ -17,7 +17,7 @@ export class FaqService {
   async getAllFaqs(locale: string) {
     const faqs = await this.prisma.faq.findMany({
       include: { translations: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
     });
     return this.translationService.translateDeep(faqs, locale);
   }
