@@ -100,6 +100,32 @@ model Contact {
   @@map("contacts")
 }
 
+model Faq {
+  id Int @default(autoincrement()) @id
+  question String
+  answer String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  translations FaqTranslation[]
+
+  @@map("faqs")
+}
+
+model FaqTranslation {
+  id Int @default(autoincrement()) @id
+  faqId Int
+  locale String
+  question String
+  answer String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faq Faq @relation(fields: [faqId], references: [id], onDelete: Cascade)
+  @@unique([faqId, locale])
+  @@map("faq_translations")
+}
+
 model RoleTranslation {
   id Int @default(autoincrement()) @id
   roleId Int
