@@ -91,9 +91,9 @@ model Contact {
   email String?
   phone String?
   address String?
-  telegramLink String?
-  googleMapsLink String?
-  instagramLink String?
+  telegramLink String? @db.Text
+  googleMapsLink String? @db.Text
+  instagramLink String? @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
