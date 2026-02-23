@@ -56,6 +56,7 @@ model Article {
   id Int @default(autoincrement()) @id
   title String
   content String @db.Text
+  youtubeLink String? @db.Text
   slug String @unique
   isPublished Boolean @default(true)
   publishedAt DateTime?

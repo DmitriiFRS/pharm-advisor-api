@@ -16,6 +16,10 @@ export class CreateArticleDto {
   @IsString()
   descriptionUz?: string;
 
+  @IsString()
+  @IsOptional()
+  youtubeLink?: string;
+
   @Type(() => Date)
   @IsDate()
   publishedAt: Date;

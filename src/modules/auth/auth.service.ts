@@ -145,6 +145,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
+        phoneNumber: user.phoneNumber,
         roleId: user.roleId,
         isVerified: user.isVerified,
       },

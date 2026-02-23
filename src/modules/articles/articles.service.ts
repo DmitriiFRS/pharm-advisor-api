@@ -52,7 +52,7 @@ export class ArticlesService {
   }
 
   async createArticle(dto: CreateArticleDto, files: { image?: Express.Multer.File[]; pdf?: Express.Multer.File[] }) {
-    const { publishedAt, slug, titleRu, titleUz, descriptionRu, descriptionUz } = dto;
+    const { publishedAt, slug, titleRu, titleUz, descriptionRu, descriptionUz, youtubeLink } = dto;
 
     const image = files.image?.[0];
     const pdf = files.pdf?.[0];
@@ -82,6 +82,7 @@ export class ArticlesService {
           content: descriptionRu,
           publishedAt,
           slug: finalSlug,
+          youtubeLink,
           imageId: uploadedMediaId || null,
           pdfId: uploadedPdfId || null,
         },
@@ -121,7 +122,7 @@ export class ArticlesService {
     dto: UpdateArticleDto,
     files: { image?: Express.Multer.File[]; pdf?: Express.Multer.File[] },
   ) {
-    const { publishedAt, slug, imageId, pdfId, titleRu, titleUz, descriptionRu, descriptionUz } = dto;
+    const { publishedAt, slug, imageId, pdfId, titleRu, titleUz, descriptionRu, descriptionUz, youtubeLink } = dto;
     const image = files.image?.[0];
     const pdf = files.pdf?.[0];
 
@@ -146,6 +147,7 @@ export class ArticlesService {
       if (titleRu) updateData.title = titleRu;
       if (descriptionRu) updateData.content = descriptionRu;
       if (finalSlug) updateData.slug = finalSlug;
+      if (youtubeLink) updateData.youtubeLink = youtubeLink;
 
       if (imageId) {
         if (currentArticle.imageId !== imageId) throw new BadRequestException('Неверный ID изображения');
