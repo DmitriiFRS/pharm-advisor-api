@@ -97,7 +97,22 @@ model Contact {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  translations ContactTranslation[]
+
   @@map("contacts")
+}
+
+model ContactTranslation {
+  id Int @default(autoincrement()) @id
+  contactId Int
+  locale String
+  address String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  @@unique([contactId, locale])
+  @@map("contact_translations")
 }
 
 model Faq {

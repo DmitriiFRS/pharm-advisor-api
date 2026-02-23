@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Patch, UseGuards } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { UpdateContactsDto } from './dto/update-contacts.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -10,8 +10,9 @@ export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
   @Get()
-  getContacts() {
-    return this.contactsService.getContacts();
+  getContacts(@Headers() headers: Record<string, string>) {
+    const locale = headers['accept-language'] || 'ru';
+    return this.contactsService.getTranslatedContacts(locale);
   }
 
   @Patch('/update')

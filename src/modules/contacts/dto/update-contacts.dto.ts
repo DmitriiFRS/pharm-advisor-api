@@ -7,7 +7,11 @@ export class UpdateContactsDto {
 
   @IsOptional()
   @IsString()
-  address?: string;
+  addressRu?: string;
+
+  @IsOptional()
+  @IsString()
+  addressUz?: string;
 
   @IsOptional()
   @IsString()
