@@ -33,7 +33,7 @@ export class ServicesService {
       limit,
       params: {
         orderBy: { createdAt: 'desc' },
-        include: { translations: true },
+        include: { translations: true, media: true },
       },
     });
   }
