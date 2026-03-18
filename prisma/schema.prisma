@@ -155,6 +155,57 @@ model RoleTranslation {
   @@map("role_translations")
 }
 
+model Lead {
+  id Int @default(autoincrement()) @id
+  name String?
+  email String?
+  phoneNumber String?
+  message String? @db.Text
+  page String?
+  pageSection String?
+  referrer String?
+  ipAddress String?
+  userAgent String? @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("leads")
+}
+
+model Service {
+  id Int @default(autoincrement()) @id
+  name String
+  price Int?
+  label String
+  description String @db.Text
+  serviceFeatures Json
+  imageId Int?
+  media Media? @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  translations ServiceTranslation[]
+
+  @@map("services")
+}
+
+model ServiceTranslation {
+  id Int @default(autoincrement()) @id
+  serviceId Int
+  locale String
+  name String
+  label String
+  description String @db.Text
+  serviceFeatures Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  @@unique([serviceId, locale])
+  @@map("service_translations")
+}
+
 model Media {
   id Int @default(autoincrement()) @id
   url String
@@ -166,6 +217,7 @@ model Media {
 
   articles Article[]
   articlePdf Article[] @relation("ArticlePdf")
+  services Service[]
 
   @@map("media")
 }

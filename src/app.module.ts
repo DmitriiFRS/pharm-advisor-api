@@ -10,9 +10,11 @@ import { TranslationsModule } from './modules/translations/translations.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
 import { MailModule } from './modules/mail/mail.module';
 import { FaqModule } from './modules/faq/faq.module';
+import { LeadsModule } from './modules/leads/leads.module';
+import { ServicesModule } from './modules/services/services.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, SmsModule, ArticlesModule, TranslationsModule, ContactsModule, MailModule, FaqModule],
+  imports: [AuthModule, UsersModule, SmsModule, ArticlesModule, TranslationsModule, ContactsModule, MailModule, FaqModule, LeadsModule, ServicesModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
