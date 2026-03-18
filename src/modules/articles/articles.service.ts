@@ -147,7 +147,11 @@ export class ArticlesService {
       if (titleRu) updateData.title = titleRu;
       if (descriptionRu) updateData.content = descriptionRu;
       if (finalSlug) updateData.slug = finalSlug;
-      if (youtubeLink) updateData.youtubeLink = youtubeLink;
+      if (youtubeLink) {
+        updateData.youtubeLink = youtubeLink;
+      } else {
+        updateData.youtubeLink = null;
+      }
 
       if (imageId) {
         if (currentArticle.imageId !== imageId) throw new BadRequestException('Неверный ID изображения');
