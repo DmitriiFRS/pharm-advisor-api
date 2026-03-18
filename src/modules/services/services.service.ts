@@ -19,7 +19,7 @@ export class ServicesService {
 
   async getAllServices(locale: string) {
     const services = await this.prisma.service.findMany({
-      include: { translations: true },
+      include: { translations: true, media: true },
       orderBy: { createdAt: 'asc' },
     });
 

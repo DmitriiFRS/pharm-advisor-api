@@ -179,6 +179,7 @@ model Service {
   label String
   description String @db.Text
   serviceFeatures Json
+  order Int @default(0)
   imageId Int?
   media Media? @relation(fields: [imageId], references: [id], onDelete: SetNull)
   
