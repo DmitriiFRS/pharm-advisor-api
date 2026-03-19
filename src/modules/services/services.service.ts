@@ -20,7 +20,7 @@ export class ServicesService {
   async getAllServices(locale: string) {
     const services = await this.prisma.service.findMany({
       include: { translations: true, media: true },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { order: 'desc' },
     });
 
     return this.translationService.translateDeep(services, locale);
@@ -32,7 +32,7 @@ export class ServicesService {
       page,
       limit,
       params: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: { order: 'desc' },
         include: { translations: true, media: true },
       },
     });
@@ -70,6 +70,7 @@ export class ServicesService {
       price,
       serviceFeaturesRu,
       serviceFeaturesUz,
+      order,
     } = dto;
     return await this.prisma.$transaction(async (tx) => {
       let uploadedImage: Media | null = null;
@@ -84,6 +85,7 @@ export class ServicesService {
           label: labelRu,
           serviceFeatures: serviceFeaturesRu,
           imageId: uploadedImage?.id || null,
+          order,
         },
       });
       const translations: Prisma.ServiceTranslationUncheckedCreateInput[] = [];
@@ -125,6 +127,7 @@ export class ServicesService {
       serviceFeaturesRu,
       serviceFeaturesUz,
       imageId,
+      order,
     } = dto;
 
     return await this.prisma.$transaction(async (tx) => {
@@ -139,6 +142,7 @@ export class ServicesService {
       if (descriptionRu) updatedData.description = descriptionRu;
       if (labelRu) updatedData.label = labelRu;
       if (serviceFeaturesRu) updatedData.serviceFeatures = serviceFeaturesRu;
+      if (order) updatedData.order = order;
       if (imageId) {
         if (currentService.imageId !== imageId) throw new BadRequestException('Неверный ID изображения');
         const file = await tx.media.findUnique({ where: { id: imageId } });

@@ -4,16 +4,25 @@ import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class CreateServiceDto {
   @IsString()
   nameRu: string;
+
   @IsString()
   nameUz: string;
+
   @IsString()
   descriptionRu: string;
+
   @IsString()
   descriptionUz: string;
+
   @IsString()
   labelRu: string;
+
   @IsString()
   labelUz: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  order: number;
 
   @Type(() => Number)
   @IsNumber()
