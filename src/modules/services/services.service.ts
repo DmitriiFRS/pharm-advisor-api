@@ -137,7 +137,9 @@ export class ServicesService {
       }
       const updatedData: any = {};
 
-      if (price) updatedData.price = price;
+      if (price !== undefined) {
+        updatedData.price = price;
+      }
       if (nameRu) updatedData.name = nameRu;
       if (descriptionRu) updatedData.description = descriptionRu;
       if (labelRu) updatedData.label = labelRu;
