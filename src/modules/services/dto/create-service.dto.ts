@@ -22,6 +22,7 @@ export class CreateServiceDto {
 
   @Type(() => Number)
   @IsNumber()
+  @IsOptional()
   order?: number | null;
 
   @Type(() => Number)
