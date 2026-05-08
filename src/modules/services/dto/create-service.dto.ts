@@ -22,12 +22,12 @@ export class CreateServiceDto {
 
   @Type(() => Number)
   @IsNumber()
-  order?: number;
+  order?: number | null;
 
   @Type(() => Number)
   @IsNumber()
   @IsOptional()
-  price?: number;
+  price?: number | null;
 
   @IsArray()
   @IsString({ each: true })
