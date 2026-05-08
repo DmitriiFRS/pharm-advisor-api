@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateServiceDto {
   @IsString()
@@ -22,11 +22,12 @@ export class CreateServiceDto {
 
   @Type(() => Number)
   @IsNumber()
-  order: number;
+  order?: number;
 
   @Type(() => Number)
   @IsNumber()
-  price: number;
+  @IsOptional()
+  price?: number;
 
   @IsArray()
   @IsString({ each: true })
